@@ -1,0 +1,37 @@
+I am now doing my master's project. It is a two-parameter logistic item response model. The following is my stan model code. 
+
+data{
+	int<lower=1> I;                        // # of cases
+	int<lower=1> J;                        // # of raters
+	int<lower=1> N_obs;                    // # of observations
+        int<lower=1> K;                        // # of hierarchical regressor variables  
+	int<lower=1, upper=I> i1[N_obs];       // case for n in obs
+	int<lower=1, upper=J> j1[N_obs];       // rater for n in obs
+        int<lower=0, upper=1> y_obs[N_obs];    // response for n 
+        matrix[I,K] W;                         // case covariate matrix
+        vector[K] ugamma;                      // gamma prior mean
+        matrix[K,K] sigma;                     // gamma covariance matrix
+}
+parameters{
+       vector[J] alpha;                        // threshold for rater j
+	vector<lower=0>[J] beta;                // discrimination for rater j
+	vector[I] theta;                        // significance for case i
+	vector[K] gamma;                        // regression coefficients
+	real<lower=0> tausq;                    // variance for theta
+}
+model{
+	vector[N_obs] eta1; 
+        alpha ~ normal(0,10^6);
+	beta ~ lognormal(0,10^6); 
+	tausq ~ inv_gamma(1,1); 	
+	gamma ~ multi_normal(ugamma,sigma);
+	theta ~ normal(W*gamma,sqrt(tausq));
+	for (n in 1:N_obs)
+	  eta1[n]=beta[j1[n]]*(theta[i1[n]]-alpha[j1[n]]);
+		y_obs ~ bernoulli_logit(eta1);
+}
+
+I=14401,J=38 and K=5. 
+I tried to run this model for iteration=500, chain=4. However, it was too slow, it took almost two days. 
+Can anyone tell me why it is so slow. And what can I do to increase the speed. 
+Thank you very much. 
